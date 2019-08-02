@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "752218488895",
+    "firebase_url": "https://isolate-worker.firebaseio.com",
+    "project_id": "isolate-worker",
+    "storage_bucket": "isolate-worker.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:752218488895:android:728dec32ab25fca6",
+        "android_client_info": {
+          "package_name": "com.fluttervn.isolate_worker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "752218488895-no4bdcngmi37n6i800geapgtkkdfces4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbJuulNgk-CCmEL7YR1ZHKXiVeUwv78UM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "752218488895-no4bdcngmi37n6i800geapgtkkdfces4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "752218488895-d05taeieoa6fi0ph12vblhrdopapqasv.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.fluttervn.isolateWorker"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
