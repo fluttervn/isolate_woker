@@ -4,12 +4,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import '../worker/worker.dart';
 
-
-class UploadTask implements FileTask<Future<bool>> {
+class CancelDownloadTask implements FileTask<Future<bool>> {
   final File file;
   final String fileName;
 
-  UploadTask({@required this.file, @required this.fileName, this.taskId});
+  CancelDownloadTask(
+      {@required this.file, @required this.fileName, this.taskId});
 
   @override
   Future<bool> execute() {
@@ -20,24 +20,19 @@ class UploadTask implements FileTask<Future<bool>> {
   Future<bool> _doExecute() async {
     var completer = Completer<bool>();
 
-
-
     try {
-      final storageRef =
-      FirebaseStorage.instance.ref().child(fileName);
+      final storageRef = FirebaseStorage.instance.ref().child(fileName);
 
       final uploadTask = storageRef.putFile(
-          file,
+        file,
       );
-      uploadTask.events.listen((event){
+      uploadTask.events.listen((event) {
         taskProgressCallback(
             event.snapshot.bytesTransferred, event.snapshot.totalByteCount);
       });
 
-      final downloadUrl =
-      (await uploadTask.onComplete);
+      final downloadUrl = (await uploadTask.onComplete);
       var url = (await downloadUrl.ref.getDownloadURL()) as String;
-
 
       print('UploadTask is DONE result=$url');
       completer.complete(true);

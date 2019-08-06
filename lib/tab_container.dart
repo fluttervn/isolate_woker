@@ -58,7 +58,7 @@ class _TabContainerState extends State<TabContainer> {
     var listItems = [
       BottomAppBarItem(iconData: Icons.network_wifi, text: 'Normal API'),
       BottomAppBarItem(iconData: Icons.file_download, text: 'Download'),
-      BottomAppBarItem(iconData: Icons.file_upload, text: 'Upload'),
+      BottomAppBarItem(iconData: Icons.cancel, text: 'Cancel'),
     ];
 
     var items = List.generate(listItems.length, (int index) {

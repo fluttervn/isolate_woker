@@ -23,7 +23,7 @@ class _Tab2State extends State<Tab2> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('Tab1'),
+          title: Text('Tab2'),
         ),
         body: Column(
           children: <Widget>[
