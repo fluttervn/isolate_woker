@@ -1,12 +1,10 @@
 part of worker.core;
 
-Map<String, FileTask> mapUploadTask = Map();
-Map<String, FileTask> mapDownloadTask = Map();
-void _workerMain(sendPort) {
+Map<String, FileTask> mapUploadTask = {};
+Map<String, FileTask> mapDownloadTask = {};
+void _workerMain(SendPort sendPort) {
   ReceivePort receivePort;
-  if (receivePort == null) {
-    receivePort = new ReceivePort();
-  }
+  receivePort ??= ReceivePort();
 
   if (sendPort is SendPort) {
     sendPort = sendPort;
@@ -14,10 +12,8 @@ void _workerMain(sendPort) {
     sendPort.send(receivePort.sendPort);
   }
 
-  receivePort.listen((message) {
+  receivePort.listen((dynamic message) {
     if (!_acceptMessage(sendPort, receivePort, message)) return;
-
-    var result;
 
     try {
       if (message is Task) {
@@ -25,30 +21,28 @@ void _workerMain(sendPort) {
         print('Worker: execute Task message=$message');
 
         if (message is FileTask) {
-          if (message.actionType == ActionType.UPLOAD) {
+          if (message.actionType == ActionType.upload) {
             taskId = message.taskId;
             mapUploadTask[taskId] = message;
 
             sendPort.send(taskId);
             message.taskProgressCallback = (count, total) {
-              sendPort.send(new _WorkerProgress(
+              sendPort.send(_WorkerProgress(
                 count: count,
                 total: total,
                 taskId: message.taskId,
               ));
             };
-          }
-          else if (message.actionType == ActionType.DOWNLOAD) {
+          } else if (message.actionType == ActionType.download) {
             mapDownloadTask[taskId] = message;
             message.taskProgressCallback = (count, total) {
-              sendPort.send(new _WorkerProgress(
+              sendPort.send(_WorkerProgress(
                 count: count,
                 total: total,
                 taskId: message.taskId,
               ));
             };
-          }
-          else if (message.actionType == ActionType.CANCEL_UPLOAD) {
+          } else if (message.actionType == ActionType.cancelUpload) {
             print('... CancelUploadTask message=$message');
             mapUploadTask.forEach((taskId, uploadTask) {
               if (taskId == message.taskId) {
@@ -57,8 +51,7 @@ void _workerMain(sendPort) {
             });
 
             return;
-          }
-          else if (message.actionType == ActionType.CANCEL_DOWNLOAD) {
+          } else if (message.actionType == ActionType.cancelDownload) {
             print('... CancelDownloadTask message=$message');
             mapDownloadTask.forEach((taskId, downloadTask) {
               if (taskId == message.taskId) {
@@ -70,18 +63,19 @@ void _workerMain(sendPort) {
           }
         }
 
-        result = message.execute();
+        dynamic result = message.execute();
 //        Function callback = mapTaskCallback[taskId];
 //        if (callback != null) {}
 
         if (result is Future) {
           result.then(
-                (futureResult) {
+            (dynamic futureResult) {
               print(
-                  'Worker: main: ------ WorkerResult: ${result.runtimeType}: result=$futureResult');
-              sendPort.send(new _WorkerResult(futureResult, taskId: taskId));
+                  'Worker: main: ------ WorkerResult: ${result.runtimeType}'
+                      ': result=$futureResult');
+              sendPort.send(_WorkerResult(futureResult, taskId: taskId));
             },
-            onError: (exception, stackTrace) {
+            onError: (dynamic exception, StackTrace stackTrace) {
               print('Worker: execute main but FAIL: exception=$exception, '
                   'stackTrace=$stackTrace');
               sendException(sendPort, exception, stackTrace);
@@ -89,12 +83,13 @@ void _workerMain(sendPort) {
           );
         } else {
           print('Worker: main2: WorkerResult: result2=$result');
-          sendPort.send(new _WorkerResult(result, taskId: taskId));
+          sendPort.send(_WorkerResult(result, taskId: taskId));
         }
       } else if (message is String) {
         print('Worker: execute TaskId=$message');
-      } else
-        throw new Exception('Message is not a task');
+      } else {
+        throw Exception('Message is not a task');
+      }
     } catch (exception, stackTrace) {
       print('... Worker: execute Task message=$message but FAIL: '
           'exception=$exception, stackTrace=$stackTrace');
@@ -103,9 +98,10 @@ void _workerMain(sendPort) {
   });
 }
 
-bool _acceptMessage(SendPort sendPort, ReceivePort receivePort, message) {
-  if (message is _WorkerSignal && message.id == _CLOSE_SIGNAL.id) {
-    sendPort.send(_CLOSE_SIGNAL);
+bool _acceptMessage(
+    SendPort sendPort, ReceivePort receivePort, dynamic message) {
+  if (message is _WorkerSignal && message.id == closeSignal.id) {
+    sendPort.send(closeSignal);
     receivePort.close();
     return false;
   }
@@ -113,15 +109,14 @@ bool _acceptMessage(SendPort sendPort, ReceivePort receivePort, message) {
   return true;
 }
 
-void sendException(SendPort sendPort, exception, StackTrace stackTrace) {
+void sendException(
+    SendPort sendPort, dynamic exception, StackTrace stackTrace) {
   if (exception is Error) {
     exception = Error.safeToString(exception);
   }
 
-  var stackTraceFrames;
-  if (stackTrace != null) {
-    stackTraceFrames = new Trace.from(stackTrace).frames;
-  }
+  var stackTraceFrames =
+      stackTrace != null ? Trace.from(stackTrace).frames : null;
 
-  sendPort.send(new _WorkerException(exception, stackTraceFrames));
+  sendPort.send(_WorkerException(exception, stackTraceFrames));
 }

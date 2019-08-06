@@ -10,13 +10,12 @@ import 'events.dart';
 part 'worker_impl.dart';
 part 'worker_isolate_src.dart';
 
-/**
- * A concurrent [Task] executor.
- *
- * A [Worker] creates and manages a pool of isolates providing you with an easy
- * way to perform blocking tasks concurrently. It spawns isolates lazily as [Task]s
- * are required to execute.
- */
+/// A concurrent [Task] executor.
+///
+/// A [Worker] creates and manages a pool of isolates providing you with an easy
+/// way to perform blocking tasks concurrently.
+/// It spawns isolates lazily as [Task]s
+/// are required to execute.
 
 abstract class Worker {
   bool get isClosed;
@@ -49,11 +48,9 @@ abstract class Worker {
   Stream<TaskFailedEvent> get onTaskFailed;
 
   factory Worker ({int poolSize, bool spawnLazily = true}) {
-    if (poolSize == null) {
-      poolSize = Platform.numberOfProcessors;
-    }
+    poolSize ??= Platform.numberOfProcessors;
 
-    return new _WorkerImpl(poolSize: poolSize, spawnLazily: spawnLazily);
+    return _WorkerImpl(poolSize: poolSize, spawnLazily: spawnLazily);
   }
 
   /// Returns a [Future] with the result of the execution of the [Task].
@@ -65,12 +62,10 @@ abstract class Worker {
 
 }
 
-/**
- * A representation of an isolate
- *
- * A representation of an isolate containing a [SendPort] to it and the tasks
- * that are running on it.
- */
+/// A representation of an isolate
+///
+/// A representation of an isolate containing a [SendPort] to it and the tasks
+/// that are running on it.
 abstract class WorkerIsolate {
   bool get isClosed;
   bool get isFree;
@@ -93,7 +88,7 @@ abstract class WorkerIsolate {
   /// Stream of task failed events.
   Stream<TaskFailedEvent> get onTaskFailed;
 
-  factory WorkerIsolate () => new _WorkerIsolateImpl();
+  factory WorkerIsolate () => _WorkerIsolateImpl();
 
   Future performTask(Task task, {Function(TransferProgress progress) callback});
 
@@ -107,15 +102,14 @@ class TaskCancelledException implements Exception {
 
   TaskCancelledException (this.task);
 
+  @override
   String toString() =>
-      "$task cancelled.";
+      '$task cancelled.';
 }
 
-/**
- * A task that needs to be executed.
- *
- * This class provides an interface for tasks.
- */
+/// A task that needs to be executed.
+///
+/// This class provides an interface for tasks.
 abstract class Task<T> {
 
   T execute ();
@@ -131,7 +125,7 @@ abstract class FileTask<T> extends Task<T>{
 
 }
 
-enum ActionType { UPLOAD, DOWNLOAD, CANCEL_UPLOAD, CANCEL_DOWNLOAD }
+enum ActionType { upload, download, cancelUpload, cancelDownload }
 
 class TransferProgress {
   final int count;

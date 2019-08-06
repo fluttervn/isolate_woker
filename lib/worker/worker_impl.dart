@@ -3,55 +3,65 @@ part of worker.core;
 class _WorkerImpl implements Worker {
   bool _isClosed = false;
 
-  bool get isClosed => this._isClosed;
+  @override
+  bool get isClosed => _isClosed;
 
+  @override
   int poolSize;
 
-  final Queue<WorkerIsolate> isolates = new Queue<WorkerIsolate>();
+  @override
+  final Queue<WorkerIsolate> isolates = Queue<WorkerIsolate>();
 
+  @override
   Iterable<WorkerIsolate> get availableIsolates =>
-      this.isolates.where((isolate) => isolate.isFree);
+      isolates.where((isolate) => isolate.isFree);
 
+  @override
   Iterable<WorkerIsolate> get workingIsolates =>
-      this.isolates.where((isolate) => !isolate.isFree);
+      isolates.where((isolate) => !isolate.isFree);
 
-  StreamController<IsolateSpawnedEvent> _isolateSpawnedEventController =
-      new StreamController<IsolateSpawnedEvent>.broadcast();
+  final StreamController<IsolateSpawnedEvent> _isolateSpawnedEventController =
+      StreamController<IsolateSpawnedEvent>.broadcast();
 
+  @override
   Stream<IsolateSpawnedEvent> get onIsolateSpawned =>
       _isolateSpawnedEventController.stream;
 
-  StreamController<IsolateClosedEvent> _isolateClosedEventController =
-      new StreamController<IsolateClosedEvent>.broadcast();
+  final StreamController<IsolateClosedEvent> _isolateClosedEventController =
+      StreamController<IsolateClosedEvent>.broadcast();
 
+  @override
   Stream<IsolateClosedEvent> get onIsolateClosed =>
       _isolateClosedEventController.stream;
 
-  StreamController<TaskScheduledEvent> _taskScheduledEventController =
-      new StreamController<TaskScheduledEvent>.broadcast();
+  final StreamController<TaskScheduledEvent> _taskScheduledEventController =
+      StreamController<TaskScheduledEvent>.broadcast();
 
+  @override
   Stream<TaskScheduledEvent> get onTaskScheduled =>
       _taskScheduledEventController.stream;
 
-  StreamController<TaskCompletedEvent> _taskCompletedEventController =
-      new StreamController<TaskCompletedEvent>.broadcast();
+  final StreamController<TaskCompletedEvent> _taskCompletedEventController =
+      StreamController<TaskCompletedEvent>.broadcast();
 
+  @override
   Stream<TaskCompletedEvent> get onTaskCompleted =>
       _taskCompletedEventController.stream;
 
-  StreamController<TaskFailedEvent> _taskFailedEventController =
-      new StreamController<TaskFailedEvent>.broadcast();
+  final StreamController<TaskFailedEvent> _taskFailedEventController =
+      StreamController<TaskFailedEvent>.broadcast();
 
-  Stream<TaskFailedEvent> get onTaskFailed =>
-      _taskFailedEventController.stream;
+  @override
+  Stream<TaskFailedEvent> get onTaskFailed => _taskFailedEventController.stream;
 
-  _WorkerImpl ({this.poolSize = 1, spawnLazily = true}) {
-    if (this.poolSize <= 0)
-      this.poolSize = 1;
+  _WorkerImpl({this.poolSize = 1, bool spawnLazily = true}) {
+    if (poolSize <= 0) {
+      poolSize = 1;
+    }
 
     if (!spawnLazily) {
-      for (var i = 0; i < this.poolSize; i++) {
-        this._spawnIsolate();
+      for (var i = 0; i < poolSize; i++) {
+        _spawnIsolate();
       }
     }
   }
@@ -68,154 +78,152 @@ class _WorkerImpl implements Worker {
 //      throw new Exception("No isolate available");
 //  }
 
+  @override
   Future handle(Task task, {Function(TransferProgress progress) callback}) {
-    if (this.isClosed) throw new Exception('Worker is closed!');
+    if (isClosed) throw Exception('Worker is closed!');
 
-
-
-
-      if (task is FileTask &&
-          (task.actionType == ActionType.CANCEL_UPLOAD || task.actionType == ActionType.CANCEL_DOWNLOAD)) {
-        String taskId = task.taskId;
-        isolates.forEach((workerIsolate) {
-          print('Worker: handle: CancelFileTask: $workerIsolate');
-          if (workerIsolate.taskId == taskId) {
-            workerIsolate.performTask(task, callback: callback);
-          }
-        });
-
-        return Future.value(null);
+    if (task is FileTask &&
+        (task.actionType == ActionType.cancelUpload ||
+            task.actionType == ActionType.cancelDownload)) {
+      var taskId = task.taskId;
+      for (var workerIsolate in workingIsolates) {
+        print('Worker: handle: CancelFileTask: $workerIsolate');
+        if (workerIsolate.taskId == taskId) {
+          workerIsolate.performTask(task, callback: callback);
+        }
       }
 
+      return Future<dynamic>.value(null);
+    }
 
-
-
-    WorkerIsolate isolate = this._selectIsolate();
+    var isolate = _selectIsolate();
 
     if (isolate != null) {
       return isolate.performTask(task, callback: callback);
-    } else
-      throw new Exception("No isolate available");
+    } else {
+      throw Exception('No isolate available');
+    }
   }
 
+  WorkerIsolate _selectIsolate() {
+    return isolates.firstWhere((islt) => islt.isFree, orElse: () {
+      WorkerIsolate isolate;
 
-  WorkerIsolate _selectIsolate () {
-    return this.isolates.firstWhere((islt) => islt.isFree,
-        orElse:
-          () {
-            var isolate;
+      if (isolates.length < poolSize) {
+        isolate = _spawnIsolate();
+      } else {
+        isolate = isolates.firstWhere((isolate) => isolate.isFree,
+            orElse: () => isolates.reduce((a, b) =>
+                a.scheduledTasks.length <= b.scheduledTasks.length ? a : b));
+      }
 
-            if (this.isolates.length < this.poolSize) {
-              isolate = this._spawnIsolate();
-            } else {
-              isolate = this.isolates.firstWhere(
-                  (isolate) => isolate.isFree,
-                  orElse: () => this.isolates.reduce(
-                      (a, b) =>
-                          a.scheduledTasks.length <= b.scheduledTasks.length ?
-                              a : b));
-            }
-
-            return isolate;
-        });
+      return isolate;
+    });
   }
 
-  WorkerIsolate _spawnIsolate () {
-    var isolate = new _WorkerIsolateImpl();
+  WorkerIsolate _spawnIsolate() {
+    var isolate = _WorkerIsolateImpl();
     mergeStream(_isolateSpawnedEventController, isolate.onSpawned);
     mergeStream(_isolateClosedEventController, isolate.onClosed);
     mergeStream(_taskScheduledEventController, isolate.onTaskScheduled);
     mergeStream(_taskCompletedEventController, isolate.onTaskCompleted);
     mergeStream(_taskFailedEventController, isolate.onTaskFailed);
-    this.isolates.add(isolate );
+    isolates.add(isolate);
 
     return isolate;
   }
 
-  Future<Worker> close ({bool afterDone= true}) {
-    if (this._isClosed)
-          return new Future.value(this);
+  @override
+  Future<Worker> close({bool afterDone = true}) {
+    if (_isClosed) {
+      return Future.value(this);
+    }
 
-    this._isClosed = true;
+    _isClosed = true;
 
     var closeFutures = <Future<WorkerIsolate>>[];
-    this.isolates.forEach(
-        (isolate) => closeFutures.add(isolate.close(afterDone: afterDone)));
+
+    for (var isolate in isolates) {
+      closeFutures.add(isolate.close(afterDone: afterDone));
+    }
 
     return Future.wait(closeFutures).then((_) => this);
   }
-
 }
 
 class _WorkerIsolateImpl implements WorkerIsolate {
-  Map<String, Function(TransferProgress progress)> mapTaskCallback = Map();
+  Map<String, Function(TransferProgress progress)> mapTaskCallback = {};
   bool _isClosed = false;
 
-  bool get isClosed => this._isClosed;
+  @override
+  bool get isClosed => _isClosed;
 
   ReceivePort _receivePort;
 
   SendPort _sendPort;
 
-  Queue<_ScheduledTask> _scheduledTasks = new Queue<_ScheduledTask>();
+  final Queue<_ScheduledTask> _scheduledTasks = Queue<_ScheduledTask>();
 
   _ScheduledTask _runningScheduledTask;
 
-  Task get runningTask => _runningScheduledTask != null ?
-                            _runningScheduledTask.task : null;
+  @override
+  Task get runningTask =>
+      _runningScheduledTask != null ? _runningScheduledTask.task : null;
 
-  List<Task> get scheduledTasks =>
-      _scheduledTasks.map((scheduledTask) => scheduledTask.task)
-        .toList(growable: false);
+  @override
+  List<Task> get scheduledTasks => _scheduledTasks
+      .map((scheduledTask) => scheduledTask.task)
+      .toList(growable: false);
 
+  @override
   bool get isFree => _scheduledTasks.isEmpty && _runningScheduledTask == null;
 
-  StreamController<IsolateSpawnedEvent> _spawnEventController =
-      new StreamController<IsolateSpawnedEvent>.broadcast();
+  final StreamController<IsolateSpawnedEvent> _spawnEventController =
+      StreamController<IsolateSpawnedEvent>.broadcast();
 
-  Stream<IsolateSpawnedEvent> get onSpawned =>
-      _spawnEventController.stream;
+  @override
+  Stream<IsolateSpawnedEvent> get onSpawned => _spawnEventController.stream;
 
-  StreamController<IsolateClosedEvent> _closeEventController =
-      new StreamController<IsolateClosedEvent>.broadcast();
+  final StreamController<IsolateClosedEvent> _closeEventController =
+      StreamController<IsolateClosedEvent>.broadcast();
 
-  Stream<IsolateClosedEvent> get onClosed =>
-      _closeEventController.stream;
+  @override
+  Stream<IsolateClosedEvent> get onClosed => _closeEventController.stream;
 
-  StreamController<TaskScheduledEvent> _taskScheduledEventController =
-      new StreamController<TaskScheduledEvent>.broadcast();
+  final StreamController<TaskScheduledEvent> _taskScheduledEventController =
+      StreamController<TaskScheduledEvent>.broadcast();
 
+  @override
   Stream<TaskScheduledEvent> get onTaskScheduled =>
       _taskScheduledEventController.stream;
 
-  StreamController<TaskCompletedEvent> _taskCompletedEventController =
-      new StreamController<TaskCompletedEvent>.broadcast();
+  final StreamController<TaskCompletedEvent> _taskCompletedEventController =
+      StreamController<TaskCompletedEvent>.broadcast();
 
+  @override
   Stream<TaskCompletedEvent> get onTaskCompleted =>
       _taskCompletedEventController.stream;
 
-  StreamController<TaskFailedEvent> _taskFailedEventController =
-      new StreamController<TaskFailedEvent>.broadcast();
+  final StreamController<TaskFailedEvent> _taskFailedEventController =
+      StreamController<TaskFailedEvent>.broadcast();
 
-  Stream<TaskFailedEvent> get onTaskFailed =>
-      _taskFailedEventController.stream;
+  @override
+  Stream<TaskFailedEvent> get onTaskFailed => _taskFailedEventController.stream;
 
   Completer<WorkerIsolate> _closeCompleter;
 
-  _WorkerIsolateImpl () {
-    this._receivePort = new ReceivePort();
+  _WorkerIsolateImpl() {
+    _receivePort = ReceivePort();
 
-    this._spawnIsolate();
+    _spawnIsolate();
   }
 
   Future<WorkerIsolate> _spawnIsolate() {
-    Completer<WorkerIsolate> completer = new Completer();
-    Isolate.spawn(_workerMain, this._receivePort.sendPort).then((isolate) {},
-        onError: (error) {
-          print(error);
-        });
+    var completer = Completer<WorkerIsolate>();
+    Isolate.spawn(_workerMain, _receivePort.sendPort)
+        .then((isolate) {}, onError: print);
 
-    this._receivePort.listen((message) {
+    _receivePort.listen((dynamic message) {
 //      print('Worker: receivePort: $message');
       if (message is _WorkerProgress) {
         Function callback = mapTaskCallback[message.taskId];
@@ -230,205 +238,205 @@ class _WorkerIsolateImpl implements WorkerIsolate {
 
         return;
       } else if (message is FileTask &&
-          (message.actionType == ActionType.CANCEL_UPLOAD || message.actionType == ActionType.CANCEL_DOWNLOAD)) {
+          (message.actionType == ActionType.cancelUpload ||
+              message.actionType == ActionType.cancelDownload)) {
         print('... CancelFileTask this=$this');
 
         return;
       } else if (message is SendPort) {
         print('... SendPort this=$this');
         completer.complete(this);
-        this._spawnEventController.add(new IsolateSpawnedEvent(this));
-        this._sendPort = message;
+        _spawnEventController.add(IsolateSpawnedEvent(this));
+        _sendPort = message;
 
-        this._runNextTask();
+        _runNextTask();
 
         return;
       } else if (message is String) {
         print('... SendPort this String=$message');
 //        completer.complete(this);
 //        this._spawnEventController.add(new IsolateSpawnedEvent(this));
-        this.taskId = message;
+        taskId = message;
 
 //        this._runNextTask();
 
         return;
       } else if (message is _WorkerException) {
-        this._taskFailedEventController.add(new TaskFailedEvent(
+        _taskFailedEventController.add(TaskFailedEvent(
             this,
-            this._runningScheduledTask.task,
+            _runningScheduledTask.task,
             message.exception,
             message.stackTrace));
 
-        this
-            ._runningScheduledTask
+
+            _runningScheduledTask
             .completer
             .completeError(message.exception, message.stackTrace);
       } else if (message is _WorkerSignal) {
-        if (message.id == _CLOSE_SIGNAL.id) {
-          this._closeEventController.add(new IsolateClosedEvent(this));
-          this._closeStreamControllers();
+        if (message.id == closeSignal.id) {
+          _closeEventController.add(IsolateClosedEvent(this));
+          _closeStreamControllers();
           _receivePort.close();
         }
       } else if (message is _WorkerResult) {
         print('... WorkerResult result=${message.result}, this=$this');
-        this._taskCompletedEventController.add(new TaskCompletedEvent(
-            this, this._runningScheduledTask.task, message.result));
+        _taskCompletedEventController.add(TaskCompletedEvent(
+            this, _runningScheduledTask.task, message.result));
 
-        this._runningScheduledTask.completer.complete(message.result);
+        _runningScheduledTask.completer.complete(message.result);
       }
 
-      this._runningScheduledTask = null;
+      _runningScheduledTask = null;
 
-      this._runNextTask();
-    }, onError: (exception) {
-      this._runningScheduledTask.completer.completeError(exception);
-      this._runningScheduledTask = null;
+      _runNextTask();
+    }, onError: (dynamic exception) {
+      _runningScheduledTask.completer.completeError(exception);
+      _runningScheduledTask = null;
     });
 
     return completer.future;
   }
 
+  @override
   Future performTask(Task task,
       {Function(TransferProgress progress) callback}) {
     print('Worker: performTask $task');
-    if (this.isClosed) throw new StateError('This WorkerIsolate is closed.');
+    if (isClosed) throw StateError('This WorkerIsolate is closed.');
 
     if (task is FileTask &&
-        (task.actionType == ActionType.CANCEL_UPLOAD || task.actionType == ActionType.CANCEL_DOWNLOAD)) {
+        (task.actionType == ActionType.cancelUpload ||
+            task.actionType == ActionType.cancelDownload)) {
       print('Worker: performTask _sendPort.send of CancelFileTask');
-      this._sendPort.send(task);
-      return Future.value(null);
+      _sendPort.send(task);
+      return Future<void>.value(null);
     }
 
-    Completer completer = new Completer();
-    // TODO(triet) at this time only DownloadTask and UploadFileTask has callback
-
+    var completer = Completer<void>();
 
     if (task is FileTask &&
-        (task.actionType == ActionType.UPLOAD || task.actionType == ActionType.DOWNLOAD)) {
+        (task.actionType == ActionType.upload ||
+            task.actionType == ActionType.download)) {
       mapTaskCallback[task.taskId] = callback;
     }
 
-    this._scheduledTasks.add(new _ScheduledTask(task, completer));
-    this._taskScheduledEventController.add(new TaskScheduledEvent(this, task));
+    _scheduledTasks.add(_ScheduledTask(task, completer));
+    _taskScheduledEventController.add(TaskScheduledEvent(this, task));
 
-    this._runNextTask();
+    _runNextTask();
 
     return completer.future;
   }
 
-  void _runNextTask () {
+  void _runNextTask() {
     if (_sendPort == null ||
-        _scheduledTasks.length == 0 ||
+        _scheduledTasks.isEmpty ||
         (_runningScheduledTask != null &&
-        !_runningScheduledTask.completer.isCompleted)) {
+            !_runningScheduledTask.completer.isCompleted)) {
       return;
     }
 
     _runningScheduledTask = _scheduledTasks.removeFirst();
 
-    this._sendPort.send(_runningScheduledTask.task);
-
+    _sendPort.send(_runningScheduledTask.task);
   }
 
-  void _closeStreamControllers () {
-    this._spawnEventController.close();
-    this._closeEventController.close();
-    this._taskScheduledEventController.close();
-    this._taskCompletedEventController.close();
-    this._taskFailedEventController.close();
+  void _closeStreamControllers() {
+    _spawnEventController.close();
+    _closeEventController.close();
+    _taskScheduledEventController.close();
+    _taskCompletedEventController.close();
+    _taskFailedEventController.close();
   }
 
-  Future<WorkerIsolate> close ({bool afterDone= true}) {
-    if (this._isClosed)
-      return new Future.value(this);
+  @override
+  Future<WorkerIsolate> close({bool afterDone = true}) {
+    if (_isClosed) {
+      return Future.value(this);
+    }
 
-    this._isClosed = true;
-    this._closeCompleter = new Completer<WorkerIsolate>();
+    _isClosed = true;
+    _closeCompleter = Completer<WorkerIsolate>();
 
     if (afterDone) {
-      var closeIfDone = (_) {
-        if (this.isFree) {
-          this._close();
+      var closeIfDone = (dynamic data) {
+        if (isFree) {
+          _close();
         }
       };
 
       var waitTasksToComplete = () {
-        if (!this.isFree) {
-          this.onTaskCompleted.listen(closeIfDone);
-          this.onTaskFailed.listen(closeIfDone);
+        if (!isFree) {
+          onTaskCompleted.listen(closeIfDone);
+          onTaskFailed.listen(closeIfDone);
         } else {
-          this._close();
+          _close();
         }
       };
 
-      if (this._sendPort == null) {
-        this.onSpawned.listen((_) {
+      if (_sendPort == null) {
+        onSpawned.listen((_) {
           waitTasksToComplete();
         });
       } else {
         waitTasksToComplete();
       }
     } else {
-      this.onSpawned.first.then((_) {
-        this._close();
+      onSpawned.first.then((_) {
+        _close();
       });
     }
 
-    return this._closeCompleter.future;
+    return _closeCompleter.future;
   }
 
-  void _close () {
-    if (this._sendPort != null) {
-      this._sendPort.send(_CLOSE_SIGNAL);
-      this._sendPort = null;
+  void _close() {
+    if (_sendPort != null) {
+      _sendPort.send(closeSignal);
+      _sendPort = null;
     }
 
-    this._receivePort.close();
-    this._closeEventController.add(new IsolateClosedEvent(this));
-    this._closeCompleter.complete(this);
+    _receivePort.close();
+    _closeEventController.add(IsolateClosedEvent(this));
+    _closeCompleter.complete(this);
 
-    var cancelTask = (scheduledTask) {
-      var exception = new TaskCancelledException(scheduledTask.task);
+    var cancelTask = (_ScheduledTask scheduledTask) {
+      var exception = TaskCancelledException(scheduledTask.task);
       scheduledTask.completer.completeError(exception);
-            this._taskFailedEventController.add(
-                new TaskFailedEvent(this, scheduledTask.task, exception));
+
+      _taskFailedEventController
+          .add(TaskFailedEvent(this, scheduledTask.task, exception));
     };
 
-    if (this._runningScheduledTask != null) {
-      cancelTask(this._runningScheduledTask);
+    if (_runningScheduledTask != null) {
+      cancelTask(_runningScheduledTask);
     }
 
-    this._scheduledTasks.forEach(cancelTask);
+    _scheduledTasks.forEach(cancelTask);
   }
 
   @override
   String taskId;
-
 }
 
 class _ScheduledTask {
   Completer completer;
   Task task;
 
-  _ScheduledTask (Task this.task, Completer this.completer);
+  _ScheduledTask(this.task, this.completer);
 }
 
+/// Signals:
+///  1 - CloseIsolate
+const closeSignal = _WorkerSignal(1);
 
-/**
- * Signals:
- *  1 - CloseIsolate
- */
-const _CLOSE_SIGNAL = const _WorkerSignal(1);
 class _WorkerSignal {
   final int id;
 
-  const _WorkerSignal (this.id);
-
+  const _WorkerSignal(this.id);
 }
 
 class _WorkerResult {
-  final result;
+  final dynamic result;
   final String taskId;
   _WorkerResult(this.result, {this.taskId});
 
@@ -438,29 +446,23 @@ class _WorkerResult {
   }
 }
 
-
-
 class _WorkerException {
-  final exception;
+  final dynamic exception;
   final List<Frame> stackTraceFrames;
   StackTrace get stackTrace {
-    if (stackTraceFrames != null) {
-      return new Trace(stackTraceFrames).vmTrace;
-    }
+    if (stackTraceFrames != null) {}
 
     return null;
   }
 
-  _WorkerException (this.exception, this.stackTraceFrames);
+  _WorkerException(this.exception, this.stackTraceFrames);
 }
 
-void mergeStream (EventSink sink, Stream stream) {
-  stream.listen(
-      (data) => sink.add(data),
-      onError: (errorEvent, stackTrace) =>
+void mergeStream(EventSink sink, Stream stream) {
+  stream.listen((dynamic data) => sink.add(data),
+      onError: (dynamic errorEvent, StackTrace stackTrace) =>
           sink.addError(errorEvent, stackTrace));
 }
-
 
 // An add code
 class _WorkerProgress {

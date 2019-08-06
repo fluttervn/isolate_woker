@@ -21,7 +21,6 @@ class _Tab2State extends State<Tab2> {
 
   @override
   Widget build(BuildContext context) {
-    print('rebuild');
     return Scaffold(
         appBar: AppBar(
           title: Text('Tab1'),
@@ -30,9 +29,7 @@ class _Tab2State extends State<Tab2> {
           children: <Widget>[
             RaisedButton(
               child: Text('Download'),
-              onPressed: () {
-                downloadImage();
-              },
+              onPressed: downloadImage,
             ),
             Divider(),
             loading
@@ -40,7 +37,7 @@ class _Tab2State extends State<Tab2> {
                     radius: 150.0,
                     lineWidth: 10.0,
                     percent: percent,
-                    center: Text("Downloading..."),
+                    center: Text('${(percent * 100).toInt()}%'),
                     backgroundColor: Colors.grey,
                     progressColor: Colors.blue,
                   )
@@ -59,20 +56,19 @@ class _Tab2State extends State<Tab2> {
     });
 
     Function(TransferProgress progress) progressCallback = (progress) {
-//      print('DownloadTask callback count=${progress.count}, total=${progress.total}');
       setState(() {
         percent = progress.count / progress.total;
       });
     };
 
-    Directory saveFolder = await Utils.getDownloadDirectory('Demo/Download');
+    var saveFolder = await Utils.getDownloadDirectory('Demo/Download');
     final fullPath = '${saveFolder.path}/download.jpg';
     print('fullpath: $fullPath');
     final urlPath = 'https://sample-videos.com/img/Sample-jpg-image-2mb.jpg';
     final dio = Dio();
-    DownloadTask downloadTask = DownloadTask(
+    var downloadTask = DownloadTask(
         taskId: fullPath, dio: dio, url: urlPath, savePath: fullPath);
-    final Worker worker = Worker(poolSize: 1);
+    final worker = Worker(poolSize: 1);
     await worker.handle(downloadTask, callback: progressCallback);
     setState(() {
       loading = false;

@@ -17,7 +17,7 @@ class _Tab1State extends State<Tab1> {
 
   @override
   Widget build(BuildContext context) {
-    String value = 'No data';
+    var value = 'No data';
     if (loading) {
       value = 'Loading...';
     }
@@ -34,9 +34,7 @@ class _Tab1State extends State<Tab1> {
           children: <Widget>[
             RaisedButton(
               child: Text('Get Todo'),
-              onPressed: () {
-                getTodoData();
-              },
+              onPressed: getTodoData,
             ),
             Divider(),
             Text(value)
@@ -49,9 +47,9 @@ class _Tab1State extends State<Tab1> {
       loading = true;
     });
     final dio = Dio();
-    GetTodoTask todoTask = GetTodoTask(dio: dio, id: 1);
-    final Worker worker = Worker(poolSize: 2);
-    todoModel = await worker.handle(todoTask);
+    var todoTask = GetTodoTask(dio: dio, id: 1);
+    final worker = Worker(poolSize: 2);
+    todoModel = (await worker.handle(todoTask)) as TodoModel;
     setState(() {
       loading = false;
     });

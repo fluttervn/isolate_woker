@@ -1,13 +1,8 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
 
 import 'package:isolate_worker/screens/tab1.dart';
 import 'package:isolate_worker/screens/tab2.dart';
 import 'package:isolate_worker/screens/tab3.dart';
-
-
-
 
 class TabContainer extends StatefulWidget {
   TabContainer({Key key, this.isTech}) : super(key: key);
@@ -28,7 +23,6 @@ class TabContainer extends StatefulWidget {
 }
 
 class _TabContainerState extends State<TabContainer> {
-
   int tabIndex = 0;
   Color tabColor = Colors.white;
   Color selectedTabColor = Colors.amber;
@@ -38,52 +32,36 @@ class _TabContainerState extends State<TabContainer> {
   void initState() {
     super.initState();
 
-
-
-    listScreens = [
-        Tab1(),
-      Tab2(),
-      Tab3()
-      ];
+    listScreens = [Tab1(), Tab2(), Tab3()];
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return new MaterialApp(
+    return MaterialApp(
       color: Colors.yellow,
-      home: new Scaffold(
-        body: IndexedStack(
-            index: tabIndex,
-            children: listScreens
-        ),
+      home: Scaffold(
+        body: IndexedStack(index: tabIndex, children: listScreens),
         bottomNavigationBar: _buildTabBar(),
         backgroundColor: Theme.of(context).primaryColor,
       ),
     );
   }
 
-
   void _selectedTab(int index) {
-
     setState(() {
       tabIndex = index;
     });
   }
 
-
   Widget _buildTabBar() {
-
     var listItems = [
-        BottomAppBarItem(iconData: Icons.network_wifi, text: 'Normal API'),
-        BottomAppBarItem(iconData: Icons.file_download, text: 'Download'),
-        BottomAppBarItem(iconData: Icons.file_upload, text: 'Upload'),
-      ];
+      BottomAppBarItem(iconData: Icons.network_wifi, text: 'Normal API'),
+      BottomAppBarItem(iconData: Icons.file_download, text: 'Download'),
+      BottomAppBarItem(iconData: Icons.file_upload, text: 'Upload'),
+    ];
 
-    List<Widget> items = List.generate(listItems.length, (int index) {
+    var items = List.generate(listItems.length, (int index) {
       return _buildTabItem(
         item: listItems[index],
         index: index,
@@ -106,7 +84,7 @@ class _TabContainerState extends State<TabContainer> {
     int index,
     ValueChanged<int> onPressed,
   }) {
-    Color color = tabIndex == index ? selectedTabColor : tabColor;
+    var color = tabIndex == index ? selectedTabColor : tabColor;
     return Expanded(
       child: SizedBox(
         height: 60,

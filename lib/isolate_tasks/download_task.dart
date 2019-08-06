@@ -5,14 +5,15 @@ import 'package:flutter/foundation.dart';
 
 import '../worker/worker.dart';
 
-final userAgent = 'FileString/3.17 (iOS; 12.1 iPhone) iPad/Stag';
-
+///Task for download file in isolate
 class DownloadTask implements FileTask<Future<bool>> {
   final Dio dio;
   final String url;
   final String savePath;
 
-  DownloadTask({@required this.dio, @required this.url, this.savePath, this.taskId});
+  DownloadTask({
+    @required this.dio, @required this.url, this.savePath, this.taskId
+  });
 
   @override
   Future<bool> execute() {
@@ -21,11 +22,10 @@ class DownloadTask implements FileTask<Future<bool>> {
   }
 
   Future<bool> _doExecute() async {
-    Completer<bool> completer = Completer();
+    var completer = Completer<bool>();
 
     try {
-
-      Response response = await dio.download(url, savePath,
+      final response = await dio.download(url, savePath,
           onReceiveProgress: taskProgressCallback);
 
 //      Response response = await dio.download(url, savePath,
@@ -44,7 +44,7 @@ class DownloadTask implements FileTask<Future<bool>> {
   }
 
   @override
-  ActionType actionType = ActionType.DOWNLOAD;
+  ActionType actionType = ActionType.download;
 
   @override
   String taskId;

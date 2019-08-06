@@ -1,15 +1,5 @@
-import 'dart:io';
-import 'dart:typed_data';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:isolate_worker/isolate_tasks/upload_task.dart';
-import 'package:isolate_worker/utils.dart';
-import 'package:isolate_worker/worker/worker.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-
-import 'package:isolate_worker/isolate_tasks/download_task.dart';
 
 
 class Tab3 extends StatefulWidget {
@@ -33,9 +23,7 @@ class _Tab3State extends State<Tab3> {
           children: <Widget>[
             RaisedButton(
               child: Text('Upload'),
-              onPressed: () {
-                uploadImage();
-              },
+              onPressed: uploadImage,
             ),
             Divider(),
             loading
@@ -43,7 +31,7 @@ class _Tab3State extends State<Tab3> {
               radius: 150.0,
               lineWidth: 10.0,
               percent: percent,
-              center: Text("Uploading..."),
+              center: Text('Uploading...'),
               backgroundColor: Colors.grey,
               progressColor: Colors.blue,
             ):
@@ -62,7 +50,9 @@ class _Tab3State extends State<Tab3> {
 //    });
 //
 //    Function(TransferProgress progress) progressCallback = (progress) {
-//      print('DownloadTask callback count=${progress.count}, total=${progress.total}');
+//      print(
+//      'DownloadTask callback count=${progress.count}, total=${progress.total}'
+//      );
 //      setState(() {
 //        percent = progress.count / progress.total;
 //      });

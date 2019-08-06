@@ -18,12 +18,12 @@ class GetTodoTask implements Task<Future<TodoModel>> {
   }
 
   Future<TodoModel> _doExecute() async {
-    Completer<TodoModel> completer = Completer();
+    var completer = Completer<TodoModel>();
 
     try {
-      Response response =
-          await dio.get('https://jsonplaceholder.typicode.com/todos/$id');
-      TodoModel todoModel = TodoModel.fromJson(response.data);
+      var response =
+          await dio.get<Map<String, dynamic>>('https://jsonplaceholder.typicode.com/todos/$id');
+      var todoModel = TodoModel.fromJson(response.data);
 
       print('GetTodoTask is DONE result=$todoModel');
       completer.complete(todoModel);
