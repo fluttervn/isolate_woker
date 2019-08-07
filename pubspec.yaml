@@ -26,7 +26,7 @@ dependencies:
   dio: ^2.1.13
   path_provider: ^1.2.0
   percent_indicator: ^2.1.1
-  firebase_storage: ^3.0.4
+#  firebase_storage: ^3.0.4
 
 dev_dependencies:
   pedantic: ^1.4.0
