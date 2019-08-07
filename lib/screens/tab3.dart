@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:isolate_worker/isolate_tasks/cancel_download_task.dart';
 import 'package:isolate_worker/utils.dart';
 import 'package:isolate_worker/worker/worker.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -17,6 +18,14 @@ class _Tab3State extends State<Tab3> {
   bool loading = false;
   double percent = 0;
   String imagePath;
+  String fullPath;
+  Worker worker;
+
+  @override
+  void initState() {
+    worker = Worker(poolSize: 2);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,21 +78,29 @@ class _Tab3State extends State<Tab3> {
     };
 
     var saveFolder = await Utils.getDownloadDirectory('Demo/Download');
-    final fullPath = '${saveFolder.path}/download.jpg';
+    fullPath = '${saveFolder.path}/download.jpg';
     print('fullpath: $fullPath');
     final urlPath = 'https://sample-videos.com/img/Sample-jpg-image-5mb.jpg';
     final dio = Dio();
     var downloadTask = DownloadTask(
         taskId: fullPath, dio: dio, url: urlPath, savePath: fullPath);
-    final worker = Worker(poolSize: 1);
-    await worker.handle(downloadTask, callback: progressCallback);
-    setState(() {
-      loading = false;
-      imagePath = fullPath;
-    });
+
+    try {
+      await worker.handle(downloadTask, callback: progressCallback);
+      setState(() {
+        loading = false;
+        imagePath = fullPath;
+      });
+    }
+    catch (e) {
+      print('error: $e');
+    }
   }
 
-  void cancel() {
-    print('cancel download');
+  void cancel() async {
+    var task = CancelDownloadTask(
+      taskId: fullPath
+    );
+    await worker.handle(task);
   }
 }

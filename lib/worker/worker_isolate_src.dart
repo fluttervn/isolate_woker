@@ -34,7 +34,9 @@ void _workerMain(SendPort sendPort) {
               ));
             };
           } else if (message.actionType == ActionType.download) {
+            taskId = message.taskId;
             mapDownloadTask[taskId] = message;
+            sendPort.send(taskId);
             message.taskProgressCallback = (count, total) {
               sendPort.send(_WorkerProgress(
                 count: count,

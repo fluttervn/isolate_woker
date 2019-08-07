@@ -10,6 +10,7 @@ class DownloadTask implements FileTask<Future<bool>> {
   final Dio dio;
   final String url;
   final String savePath;
+  CancelToken cancelToken;
 
   DownloadTask({
     @required this.dio, @required this.url, this.savePath, this.taskId
@@ -22,10 +23,12 @@ class DownloadTask implements FileTask<Future<bool>> {
   }
 
   Future<bool> _doExecute() async {
+    cancelToken = CancelToken();
     var completer = Completer<bool>();
 
     try {
       final response = await dio.download(url, savePath,
+          cancelToken: cancelToken,
           onReceiveProgress: taskProgressCallback);
 
 //      Response response = await dio.download(url, savePath,
@@ -54,6 +57,6 @@ class DownloadTask implements FileTask<Future<bool>> {
 
   @override
   void handleCancel(String taskId) {
-    // TODO: implement handleCancel
+    cancelToken?.cancel('Cancel download $taskId');
   }
 }
