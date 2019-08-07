@@ -93,6 +93,11 @@ class _Tab3State extends State<Tab3> {
       });
     }
     catch (e) {
+      if (e is DioError) {
+        if (e.type == DioErrorType.CANCEL) {
+          Utils.showToast('File has been canceled');
+        }
+      }
       print('error: $e');
     }
   }
@@ -102,5 +107,6 @@ class _Tab3State extends State<Tab3> {
       taskId: fullPath
     );
     await worker.handle(task);
+
   }
 }
