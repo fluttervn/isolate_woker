@@ -1,4 +1,5 @@
 # isolate_worker
+[![Build Status](https://travis-ci.org/fluttervn/isolate_woker.svg?branch=master)](https://travis-ci.org/fluttervn/isolate_woker)
 
 Library help run flutter tasks in other isolate.
 
