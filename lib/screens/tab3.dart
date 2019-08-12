@@ -3,11 +3,10 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:isolate_worker/isolate_tasks/cancel_download_task.dart';
+import 'package:isolate_worker/isolate_tasks/download_task.dart';
 import 'package:isolate_worker/utils.dart';
 import 'package:isolate_worker/worker/worker.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-
-import 'package:isolate_worker/isolate_tasks/download_task.dart';
 
 class Tab3 extends StatefulWidget {
   @override
@@ -54,7 +53,7 @@ class _Tab3State extends State<Tab3> {
                       RaisedButton(
                         child: Text('Cancel'),
                         onPressed: cancel,
-                      )
+                      ),
                     ],
                   )
                 : imagePath != null
@@ -91,8 +90,7 @@ class _Tab3State extends State<Tab3> {
         loading = false;
         imagePath = fullPath;
       });
-    }
-    catch (e) {
+    } catch (e) {
       if (e is DioError) {
         if (e.type == DioErrorType.CANCEL) {
           Utils.showToast('File has been canceled');
@@ -103,10 +101,7 @@ class _Tab3State extends State<Tab3> {
   }
 
   void cancel() async {
-    var task = CancelDownloadTask(
-      taskId: fullPath
-    );
+    var task = CancelDownloadTask(taskId: fullPath);
     await worker.handle(task);
-
   }
 }
