@@ -1,0 +1,32 @@
+language: dart
+os:
+- linux
+sudo: required
+dist: xenial
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - libstdc++6
+      - fonts-droid-fallback
+# safelist
+branches:
+  only:
+    - master
+install:
+  - echo 'Avoid default Travis CI install step' # this is to avoid an error with pub in Travis
+before_script:
+  - git clone https://github.com/flutter/flutter.git -b stable --depth 1
+  - mv flutter $HOME/flutter
+  - export PATH=$HOME/flutter/bin:$PATH
+  - flutter doctor -v
+script:
+  - flutter pub get
+  - flutter format -n --set-exit-if-changed ./lib || travis_terminate 1
+#  - flutter test --coverage --coverage-path=coverage.lcov
+after_success:
+#  - bash <(curl -s https://codecov.io/bash)
+cache:
+  directories:
+    - $HOME/.pub-cache
