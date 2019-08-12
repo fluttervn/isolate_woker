@@ -17,7 +17,6 @@ class DownloadTask implements FileTask<Future<bool>> {
 
   @override
   Future<bool> execute() {
-    print('exetucte...');
     return _doExecute();
   }
 
@@ -29,12 +28,7 @@ class DownloadTask implements FileTask<Future<bool>> {
       final response = await dio.download(url, savePath,
           cancelToken: cancelToken, onReceiveProgress: taskProgressCallback);
 
-//      Response response = await dio.download(url, savePath,
-//          onReceiveProgress: (int count, int total) {
-//        print('isolate: $count - $total');
-//      });
-
-      print('DownloadTask is DONE result=$response');
+      print('DownloadTask success: $response');
       completer.complete(true);
     } catch (e) {
       print('DownloadTask error: $e');

@@ -61,7 +61,6 @@ class _Tab2State extends State<Tab2> {
 
     var saveFolder = await Utils.getDownloadDirectory('Demo/Download');
     final fullPath = '${saveFolder.path}/download.jpg';
-    print('fullpath: $fullPath');
     final urlPath = 'https://sample-videos.com/img/Sample-jpg-image-2mb.jpg';
     final dio = Dio();
     var downloadTask = DownloadTask(
