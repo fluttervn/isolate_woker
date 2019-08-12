@@ -2,12 +2,10 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:isolate_worker/isolate_tasks/download_task.dart';
 import 'package:isolate_worker/utils.dart';
 import 'package:isolate_worker/worker/worker.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-
-import 'package:isolate_worker/isolate_tasks/download_task.dart';
-
 
 class Tab2 extends StatefulWidget {
   @override
@@ -43,7 +41,7 @@ class _Tab2State extends State<Tab2> {
                   )
                 : imagePath != null
                     ? Image.file(File(imagePath))
-                    : Text('No image')
+                    : Text('No image'),
           ],
         ));
   }

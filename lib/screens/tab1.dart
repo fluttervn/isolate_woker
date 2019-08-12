@@ -5,7 +5,6 @@ import 'package:isolate_worker/worker/worker.dart';
 import 'package:isolate_worker/isolate_tasks/get_todo_task.dart';
 import '../todo_model.dart';
 
-
 class Tab1 extends StatefulWidget {
   @override
   _Tab1State createState() => _Tab1State();
@@ -20,26 +19,26 @@ class _Tab1State extends State<Tab1> {
     var value = 'No data';
     if (loading) {
       value = 'Loading...';
-    }
-    else {
+    } else {
       if (todoModel != null) {
         value = todoModel.toString();
       }
     }
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Tab1'),
-        ),
-        body: Column(
-          children: <Widget>[
-            RaisedButton(
-              child: Text('Get Todo'),
-              onPressed: getTodoData,
-            ),
-            Divider(),
-            Text(value)
-          ],
-        ));
+      appBar: AppBar(
+        title: Text('Tab1'),
+      ),
+      body: Column(
+        children: <Widget>[
+          RaisedButton(
+            child: Text('Get Todo'),
+            onPressed: getTodoData,
+          ),
+          Divider(),
+          Text(value)
+        ],
+      ),
+    );
   }
 
   void getTodoData() async {
