@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'tab_container.dart';
 
-
-
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -24,8 +22,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: TabContainer()
+      home: TabContainer(),
     );
   }
 }
-

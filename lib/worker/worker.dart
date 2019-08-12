@@ -4,7 +4,9 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 import 'dart:isolate';
+
 import 'package:stack_trace/stack_trace.dart';
+
 import 'events.dart';
 
 part 'worker_impl.dart';
@@ -47,19 +49,18 @@ abstract class Worker {
   /// Stream of task failed events.
   Stream<TaskFailedEvent> get onTaskFailed;
 
-  factory Worker ({int poolSize, bool spawnLazily = true}) {
+  factory Worker({int poolSize, bool spawnLazily = true}) {
     poolSize ??= Platform.numberOfProcessors;
 
     return _WorkerImpl(poolSize: poolSize, spawnLazily: spawnLazily);
   }
 
   /// Returns a [Future] with the result of the execution of the [Task].
-  Future handle (Task task, {Function(TransferProgress progress) callback});
+  Future handle(Task task, {Function(TransferProgress progress) callback});
 
   /// Closes the [ReceivePort] of the isolates.
   /// Waits until all scheduled tasks have completed if [afterDone] is `true`.
-  Future<Worker> close ({bool afterDone});
-
+  Future<Worker> close({bool afterDone});
 }
 
 /// A representation of an isolate
@@ -88,41 +89,39 @@ abstract class WorkerIsolate {
   /// Stream of task failed events.
   Stream<TaskFailedEvent> get onTaskFailed;
 
-  factory WorkerIsolate () => _WorkerIsolateImpl();
+  factory WorkerIsolate() => _WorkerIsolateImpl();
 
   Future performTask(Task task, {Function(TransferProgress progress) callback});
 
   /// Closes the [ReceivePort] of the isolate.
   /// Waits until all scheduled tasks have completed if [afterDone] is `true`.
-  Future<WorkerIsolate> close ({bool afterDone});
+  Future<WorkerIsolate> close({bool afterDone});
 }
 
 class TaskCancelledException implements Exception {
   final Task task;
 
-  TaskCancelledException (this.task);
+  TaskCancelledException(this.task);
 
   @override
-  String toString() =>
-      '$task cancelled.';
+  String toString() => '$task cancelled.';
 }
 
 /// A task that needs to be executed.
 ///
 /// This class provides an interface for tasks.
 abstract class Task<T> {
-
-  T execute ();
+  T execute();
 }
 
 typedef ProgressCallback = void Function(int count, int total);
-abstract class FileTask<T> extends Task<T>{
+
+abstract class FileTask<T> extends Task<T> {
   ProgressCallback taskProgressCallback;
   String taskId;
   ActionType actionType;
 
   void handleCancel(String taskId);
-
 }
 
 enum ActionType { upload, download, cancelUpload, cancelDownload }

@@ -262,15 +262,10 @@ class _WorkerIsolateImpl implements WorkerIsolate {
 
         return;
       } else if (message is _WorkerException) {
-        _taskFailedEventController.add(TaskFailedEvent(
-            this,
-            _runningScheduledTask.task,
-            message.exception,
-            message.stackTrace));
+        _taskFailedEventController.add(TaskFailedEvent(this,
+            _runningScheduledTask.task, message.exception, message.stackTrace));
 
-
-            _runningScheduledTask
-            .completer
+        _runningScheduledTask.completer
             .completeError(message.exception, message.stackTrace);
       } else if (message is _WorkerSignal) {
         if (message.id == closeSignal.id) {

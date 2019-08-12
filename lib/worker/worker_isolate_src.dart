@@ -72,9 +72,8 @@ void _workerMain(SendPort sendPort) {
         if (result is Future) {
           result.then(
             (dynamic futureResult) {
-              print(
-                  'Worker: main: ------ WorkerResult: ${result.runtimeType}'
-                      ': result=$futureResult');
+              print('Worker: main: ------ WorkerResult: ${result.runtimeType}'
+                  ': result=$futureResult');
               sendPort.send(_WorkerResult(futureResult, taskId: taskId));
             },
             onError: (dynamic exception, StackTrace stackTrace) {
