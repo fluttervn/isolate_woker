@@ -45,3 +45,17 @@ class Utils {
     );
   }
 }
+
+class TransferProgress {
+  int count;
+  int total;
+//  String saveFilePath;
+  String taskId;
+
+  TransferProgress({this.count, this.total, this.taskId});
+
+  @override
+  String toString() {
+    return 'TransferProgress{count=$count, total=$total}';
+  }
+}
