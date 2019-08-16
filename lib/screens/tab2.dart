@@ -39,7 +39,11 @@ class _Tab2State extends State<Tab2> {
                     progressColor: Colors.blue,
                   )
                 : imagePath != null
-                    ? Image.file(File(imagePath))
+                    ? Image.file(
+                        File(imagePath),
+                        width: 400,
+                        height: 400,
+                      )
                     : Text('No image'),
           ],
         ));

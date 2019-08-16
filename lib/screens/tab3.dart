@@ -54,7 +54,11 @@ class _Tab3State extends State<Tab3> {
                     ],
                   )
                 : imagePath != null
-                    ? Image.file(File(imagePath))
+                    ? Image.file(
+                        File(imagePath),
+                        width: 400,
+                        height: 400,
+                      )
                     : Text('No image')
           ],
         ));
