@@ -79,6 +79,10 @@ Function(TransferProgress progress) progressCallback = (progress) {
       imagePath = fullPath;
     });
 ```
+## Using with iso library
+When checking library named iso (link: https://github.com/synw/iso). I found that it's also helpful. So I also made example use this library with same UI.
+You can check it on brand named iso.
+
 
 ## Authors
-- [anlam87](https://github.com/anticafe) (anlam12787@gmail.com)
+- [anlam87](https://github.com/anlam87) (anlam12787@gmail.com)
