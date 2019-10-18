@@ -79,6 +79,7 @@ Function(TransferProgress progress) progressCallback = (progress) {
       imagePath = fullPath;
     });
 ```
+Please refer to [my post on Medium](https://medium.com/fluttervn/run-your-code-in-background-easily-with-flutter-2e98d94f30de?source=friends_link&sk=2be1198ef7b5a5cb8191117e7339f536) for more details
 
 ## Authors
 - [anlam87](https://github.com/anticafe) (anlam12787@gmail.com)
